@@ -1,3 +1,6 @@
+require 'bundler/setup'
+require 'stamp'
+
 # This class represents a todo item and its associated
 # data: name and description. There's also a "done"
 # flag to show whether this todo item is done.
@@ -6,7 +9,7 @@ class Todo
   DONE_MARKER = 'X'
   UNDONE_MARKER = ' '
 
-  attr_accessor :title, :description, :done
+  attr_accessor :title, :description, :done, :due_date
 
   def initialize(title, description='')
     @title = title
@@ -26,8 +29,10 @@ class Todo
     self.done = false
   end
 
-  def to_s
-    "[#{done? ? DONE_MARKER : UNDONE_MARKER}] #{title}"
+  def to_s # replaces original #to_s method
+    result = "[#{done? ? DONE_MARKER : UNDONE_MARKER}] #{title}"
+    result += due_date.stamp(' (Due: Friday January 6)') if due_date
+    result
   end
 
   def ==(otherTodo)
@@ -70,7 +75,7 @@ class TodoList
   end
 
   def done?
-    @todos.all? { |todo| todo.done? }
+    @todos.all?(&:done?)
   end
 
   def <<(todo)
@@ -78,7 +83,7 @@ class TodoList
 
     @todos << todo
   end
-  alias_method :add, :<<
+  alias add <<
 
   def item_at(idx)
     @todos.fetch(idx)
@@ -133,7 +138,7 @@ class TodoList
   end
 
   def all_done
-    select { |todo| todo.done? }
+    select(&:done?)
   end
 
   def all_not_done
@@ -141,14 +146,14 @@ class TodoList
   end
 
   def mark_done(title)
-    find_by_title(title) && find_by_title(title).done!
+    find_by_title(title)&.done!
   end
 
   def mark_all_done
-    each { |todo| todo.done! }
+    each(&:done!)
   end
 
   def mark_all_undone
-    each { |todo| todo.undone! }
+    each(&:undone!)
   end
 end
